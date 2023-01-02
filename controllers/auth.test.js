@@ -2,8 +2,6 @@ const mongoose = require("mongoose");
 mongoose.set("strictQuery", false);
 
 const request = require("supertest");
-// const jest = require("jest");
-// jest.setTimeout(6000);
 
 require("dotenv").config();
 
