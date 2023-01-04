@@ -11,53 +11,53 @@ const { User } = require("../models/user");
 const { DB_TEST_HOST, PORT } = process.env;
 
 describe("test auth routes", () => {
-  let server;
-  beforeAll(() => (server = app.listen(PORT)));
-  afterAll(() => {
-    server.close()});
+  const userData = {
+    email: "testUser@gmail.com",
+    password: "654321",
+  };
 
-  beforeEach((done) => {
-    mongoose.connect(DB_TEST_HOST).then(() => done());
-  });
+  beforeAll(() =>
+    mongoose
+      .connect(DB_TEST_HOST)
+      .then(() =>
+        app.listen(PORT, () => console.log("Database connection successful"))
+      )
+      .catch((error) => {
+        console.log(error);
+        process.exit(1);
+      })
+  );
 
-  afterEach((done) => {
-    
-    mongoose.connection.db.dropCollection(() => {
-      mongoose.connection.close(() => done());
-    },);
+  test("test signup route", async () => {
+    const regUser = await request(app).post("/api/users/signup").send(userData);
+    expect(regUser.statusCode).toBe(201);
+    const { _body } = regUser;
+    expect(_body.email).toBeTruthy();
+    expect(_body.subscription).toBeTruthy();
   });
 
   test("test login route", async () => {
-    const newUser = {
-      email: "testUser@gmail.com",
-      password: "654321",
-    };
-
-    const user = await request(app).post("/api/users/signup").send(newUser);
-    // expect(response.statusCode).toBe(200);
-    // const {body} = response;
-    // expect(body.token).toByTruthy();
-    // const {token} = await User.findById(user._id);
-    // expect(body.token).toBe(token);
-
-    /*
-        1. Проверить правильность получаемого ответа на 
-        AJAX-запрос документации
-        2. Проверить что в базу записался нужный элемент.
-        */
-
-    const loginUser = {
-      email: "testUser@gmail.com",
-      password: "654321",
-    };
-
-    const response = await request(app)
-      .post("/api/users/login")
-      .send(loginUser);
+    const response = await request(app).post("/api/users/login").send(userData);
     expect(response.statusCode).toBe(200);
-    // const {body} = response;
-    // expect(body.token).toByTruthy();
-    // const {token} = await User.findById(user._id);
-    // expect(body.token).toBe(token);
+    const { _body } = response;
+    expect(_body.user.email).toBeTruthy();
+    expect(_body.user.subscription).toBeTruthy();
+    expect(_body.token).toBeTruthy();
+  });
+
+  afterAll(async () => {
+    await User.findOneAndRemove({ email: userData.email });
+
+    mongoose
+      .disconnect(DB_TEST_HOST)
+      .then(() => {
+        app.disable(PORT, () =>
+          console.log("Database disconnection successful")
+        );
+      })
+
+      .catch((error) => {
+        console.log(error);
+      });
   });
 });
