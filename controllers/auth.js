@@ -96,7 +96,7 @@ const resendVerifyEmail = async (req, res) => {
     html: `<a target="_blank" href="${BASE_URL}/api/users/verify/${user.verificationToken}">Click here to verify your email</a>`,
   };
 
-  await sendNodeMailer(verifyEmail);
+  await sendEmail(verifyEmail);
 
   res.json({
     message: "Verify email resend success",
